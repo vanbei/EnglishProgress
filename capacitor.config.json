@@ -1,0 +1,8 @@
+{
+  "appId": "com.yourname.englishprogress",
+  "appName": "英语渐进",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
