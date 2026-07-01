@@ -26,19 +26,22 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Capacitor & generate Android project
+      - name: Install dependencies & generate Android project
         run: |
-          npm ci
+          npm install
           mkdir -p www
           cp index.html www/index.html
           npx cap add android
           npx cap sync android
 
-      - name: Allow cleartext HTTP traffic
+      - name: Fix Android HTTP permissions
         run: |
-          sed -i 's|</application>|android:usesCleartextTraffic="true"\n        android:networkSecurityConfig="@xml/network_security_config">\n        </application>|g' android/app/src/main/AndroidManifest.xml || true
+          # 1. Add cleartext traffic and network config to <application> tag
+          sed -i 's|<application |<application android:usesCleartextTraffic="true" android:networkSecurityConfig="@xml/network_security_config" |' android/app/src/main/AndroidManifest.xml
+          
+          # 2. Create network security config file
           mkdir -p android/app/src/main/res/xml
-          cat > android/app/src/main/res/xml/network_security_config.xml << 'EOF'
+          cat > android/app/src/main/res/xml/network_security_config.xml << 'XMLEOF'
           <?xml version="1.0" encoding="utf-8"?>
           <network-security-config>
               <base-config cleartextTrafficPermitted="true">
@@ -47,7 +50,10 @@ jobs:
                   </trust-anchors>
               </base-config>
           </network-security-config>
-          EOF
+          XMLEOF
+          
+          # 3. Verify the manifest looks correct
+          head -20 android/app/src/main/AndroidManifest.xml
 
       - name: Build APK
         run: |
